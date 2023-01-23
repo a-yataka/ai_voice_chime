@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using YamlDotNet.Serialization;
@@ -19,10 +20,13 @@ namespace WindowsFormsApp1
         /// アプリケーションのメイン エントリ ポイントです。
         /// </summary>
 
-        private static string exeDir = Path.GetDirectoryName(Application.ExecutablePath);
-        private static string configPath = exeDir + "\\aiv_chime_config.yml";
-        private static Encoding encoding = Encoding.UTF8;
+        public static string exeDir = Path.GetDirectoryName(Application.ExecutablePath);
+        public static string configPath = exeDir + "\\aiv_chime_config.yml";
+        public static Encoding encoding = Encoding.UTF8;
         //private string exeDir = Path.GetDirectoryName(Application.ExecutablePath);
+
+        public static Dictionary<string, string[]> pathDictionary = new Dictionary<string, string[]>();
+        public static string[] timeDirectories;
 
         //public Program()
         //{
@@ -32,6 +36,7 @@ namespace WindowsFormsApp1
 
         static void Main(String[] args)
         {
+
             //new Program();
             //System.Media.SystemSounds.Exclamation.Play();
             //string exeDir;
@@ -39,20 +44,41 @@ namespace WindowsFormsApp1
             //Debug.WriteLine(Path.GetDirectoryName(Application.ExecutablePath));
             //File.Create(Path.GetDirectoryName(Application.ExecutablePath) + "/ai_v_config.yml");
 
-            InitializeConfig();
+            //InitializeConfig();
 
             Debug.WriteLine(exeDir);
 
             //わざわざ作らなくてもサンプルファイル置いておくだけでよさげ
-            WriteSample();
-            LoadConfig();
+            //WriteSample();
 
-            //VoiceUtil a = new VoiceUtil("abc");
-            //CreateNotifyIcon();
-            //Application.Run();
+            //ここでRingScheduleを取得したい
+
+            // 音声ファイルを取得するならvoiceディレクトリからwavを読み込むべき
+            Chime[] chimeList = LoadConfig();
+
+            //readWavFiles();
+
+            //ValidateConfig(chimeList);
+
+            ReadVoiceDirectory();
+
+            //
+            //RingSchedule ringSchedule = new RingSchedule();
+            //new Ring(chimeList);
+
+            //Ring ring = new Ring(chimeList);
+            //Ring.RingWav(chimeList);
+
+
+            VoiceUtil a = new VoiceUtil();
+            //a.addChime(chimeList);
+            CreateNotifyIcon();
+            Application.Run();
+
+
         }
 
-        private static void LoadConfig()
+        private static Chime[] LoadConfig()
         {
 
             var streamReader = new StreamReader(configPath, encoding);
@@ -65,11 +91,12 @@ namespace WindowsFormsApp1
                                 .Build();
 
             var deserializeObject = deserializer.Deserialize<Config>(readToEnd);
-            //Debug.WriteLine(result);
 
-            //var p = deserializer.Deserialize<Config>(sy);
 
-            Debug.WriteLine(deserializeObject.Chimes[0].Time);
+
+            Chime[] chimeList = deserializeObject.Chimes.ToArray();
+
+            return chimeList;
         }
 
         // 設定ファイルの作成
@@ -88,6 +115,69 @@ namespace WindowsFormsApp1
             //Properties.Settings.Default.AIv_CHIME_CONFIG_PATH = configPath;
             //Properties.Settings.Default.Save();
         }
+
+        private static void ValidateConfig(Chime[] chimeList)
+        {
+            List<string> timeList = new List<string>(chimeList.Length);
+            foreach (Chime chime in chimeList)
+            {
+                // チェックしたい変数
+                string time = chime.Time;
+                // ついでに次処理用に配列作成
+                timeList.Add(time);
+                if (time.Length != 4)
+                {
+                    // time文字列の長さが4文字出ない場合はエラー
+                }
+            }
+            // 時刻の重複をチェック
+            if (chimeList.Length != timeList.Distinct().Count())
+            {
+                // timeに重複がある場合はエラー
+            }
+
+            //voiceディレクトリから 拡張子がwav かつ ファイル名が4字の半角数字 のファイルを読み込む
+            //かつ0000-2400
+            //voiceディレクトリがなかったらエラー
+
+            //末尾が.wav かつ 0000-2400 かつ文字数は必ず7字
+            //その前にconfigファイルで設定したものが見つからなかったらエラー
+            //いやconfig読まなくてもvoiceにルールに沿ったファイルがあれば時報に加えるようにしよう
+            //string[] files = Directory.GetFiles(exeDir, "*Help*");
+
+        }
+
+        private static void readWavFiles()
+        {
+            ////末尾が.wav かつ 0000-2400 かつ文字数は必ず7字
+
+            //string[] filePathArray = Directory.GetFiles(exeDir, "*Help*");
+
+
+
+
+            // 正規表現
+            string pattern = @"^(([01][1-9]|2[0-3])[0-5][0-9].wav)$";
+            pattern = @"^C";
+            
+            Debug.WriteLine(pattern);
+            //string pattern = @"([01][0-9]|2[0-3])[0-5][0-9]\.wav";
+
+            //正規表現でファイル名ではなくフルパスでmatchしてる
+            //うまいことファイル名だけ取り出すか、フルパスで正規表現
+            var e = Directory.EnumerateFiles(exeDir+"\\voice")
+                .Where(x => Regex.IsMatch(x, pattern));
+
+            // 結果の表示
+            Console.WriteLine("正規表現");
+            foreach (string f in e)
+            {
+                Debug.WriteLine($"{f}");
+            }
+            Debug.WriteLine("end");
+
+        }
+
 
         // サンプルデータの書き込み
         private static void WriteSample()
@@ -135,6 +225,7 @@ namespace WindowsFormsApp1
         }
 
 
+
         private static void CreateNotifyIcon()
         {
             // 常駐アプリ（タスクトレイのアイコン）を作成
@@ -149,11 +240,106 @@ namespace WindowsFormsApp1
         {
             // アイコンを右クリックしたときのメニューを返却
             var menu = new ContextMenuStrip();
+            menu.Items.Add("ボイス生成", null, (s, e) => {
+                // メイン機能
+                DialogResult result = MessageBox.Show(
+                    "aiv_chime_config.yml からボイスデータを作成します。",
+                    "ボイスデータ作成",
+                    MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Information,
+                    MessageBoxDefaultButton.Button1
+                );
+                if (result == DialogResult.OK)
+                {
+                    //セッティング
+                    //なんかあったらエラーダイアログを返す
+                    //ymlに文法エラーとか、プリセットが見つからないとか
+                }
+            });
+            // 読み込み&ボイス生成
+            menu.Items.Add("使い方", null, (s, e) => {
+                // オフライン用ドキュメントorウェブサイトリンク
+                ;
+            });
             menu.Items.Add("終了", null, (s, e) => {
+                // アプリの終了
                 Application.Exit();
             });
             return menu;
         }
+
+        private static void ReadVoiceDirectory()
+        {
+            string pattern = @"voice\\([01][1-9]|2[0-3])[0-5][0-9]$";
+
+            IEnumerable<string> directories = Directory.EnumerateDirectories(exeDir + "\\voice")
+                .Where(x => Regex.IsMatch(x, pattern));
+
+            timeDirectories = new string[directories.Count()];
+            Debug.WriteLine("element at");
+            timeDirectories = directories.ToArray();
+
+            Debug.WriteLine(timeDirectories[0]);
+
+
+
+
+            ///////
+            Debug.WriteLine("start");
+
+            //DirectoryInfo directoryInfo = new DirectoryInfo(exeDir+"\\voice");
+            //IEnumerable<DirectoryInfo> directoryInfos = directoryInfo.EnumerateDirectories();
+
+            string pattern1 = @"voice\\([01][1-9]|2[0-3])[0-5][0-9]$";
+            string pattern2 = @".wav$";
+
+            //IEnumerable<string> directories = Directory.EnumerateDirectories(exeDir + "\\voice")
+            //    .Where(x => Regex.IsMatch(x, pattern1));
+
+
+            foreach (string directory in directories)
+            {
+                Debug.WriteLine(directory);
+                IEnumerable<string> wavFiles = Directory.EnumerateFiles(directory)
+                    .Where(x => Regex.IsMatch(x, pattern2));
+
+                pathDictionary.Add("0000", new string[wavFiles.Count()]);
+                Debug.WriteLine($"{wavFiles.Count()}");
+
+                foreach (string wavFile in wavFiles)
+                {
+                    Debug.WriteLine($"{wavFile}");
+                    //pathDictionary.Add("0000", new string[] {"aaa.wav", "bbb.wav"});
+                }
+            }
+
+
+
+            
+            //Debug.WriteLine(pattern);
+            //string pattern = @"([01][0-9]|2[0-3])[0-5][0-9]\.wav";
+
+            //正規表現でファイル名ではなくフルパスでmatchしてる
+            //うまいことファイル名だけ取り出すか、フルパスで正規表現
+            //var e = Directory.EnumerateFiles(exeDir + "\\voice")
+            //    .Where(x => Regex.IsMatch(x, pattern));
+
+            //// 結果の表示
+            //Console.WriteLine("正規表現");
+            //foreach (string f in e)
+            //{
+            //    Debug.WriteLine($"{f}");
+            //}
+            //Debug.WriteLine("end");
+
+            //foreach (DirectoryInfo di in directoryInfos)
+            //{
+            //    Debug.WriteLine(di.FullName);
+            //}
+            Debug.WriteLine("end");
+
+        }
+
     }
 
 }
