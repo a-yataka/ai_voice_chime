@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Media;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
@@ -12,95 +14,67 @@ namespace WindowsFormsApp1
 {
     class Ring
     {
+        // タイマー
         private System.Timers.Timer timer;
-        private DateTime dateTimeLastCheck;
-        private DateTime dateTimeExec;
+        // ５秒ごとに更新される現在時刻
         private DateTime dateTimeNow;
-        private Chime[] chimeList;
-        private int chimeIndex;
+        // voiceディレクトリ配下の時刻名ディレクトリ
+        private string[] timeDirectories;
+        // exeのおいてあるディレクトリ
+        private string exeDir;
 
-        public Ring(Chime[] chimeList)
+        public Ring(string[] timeDirectories, string exeDir)
         {
-            dateTimeLastCheck = DateTime.Now;
-            dateTimeExec = DateTime.Now;
             dateTimeNow = DateTime.Now;
-            this.chimeList = chimeList;
-            Array.Sort(this.chimeList, (n, m) => n.Time.CompareTo(m.Time));
+            this.timeDirectories = timeDirectories;
+            this.exeDir = exeDir;
 
-            chimeIndex = 0;
-
-            timer = new System.Timers.Timer(10000);
+            timer = new System.Timers.Timer(5000);
             // 定期実行する処理
             timer.Elapsed += OnElapsed;
             timer.Start();
         }
         private void OnElapsed(object senderObject, ElapsedEventArgs e)
         {
-            // ここで１分ごとにディレクトリチェックする？
-            // メモリがもったいない気がする
-            // ディレクトリチェックするくらいならさすがにdict型で最初に確保しておくべき
-            // 
-
-            //dateTimeExec = DateTime.Parse("02:11:00");
-            // 現在時刻の取得
+            // 現在時刻
             dateTimeNow = DateTime.Now;
 
-            string time = chimeList[chimeIndex].Time;
-            dateTimeExec = DateTime.Parse(time.Substring(0,2) + ":" + time.Substring(2) + ":00");
-
-            //Debug.WriteLine("##########");
-            //Debug.WriteLine(dateTimeLastCheck);
-            //Debug.WriteLine(dateTimeExec);
-            Debug.WriteLine(dateTimeNow);
-            //Debug.WriteLine("#####################");
-            // wavファイルを読み込む
-            //// ファイルパスは./{時刻.wav}
-            //System.Media.SoundPlayer player = new System.Media.SoundPlayer(Path.GetDirectoryName(Application.ExecutablePath) + "\\20230118-005702_琴葉 茜_テスト音声.wav");
-
-            //// 非同期再生する
-            //player.Play();
-
-            //player = null;
-            ////player.Dispose();
-
-            // 最終チェック時刻（5秒前）< 指定時刻 < 現在時刻
-            // 
-            if (dateTimeLastCheck < dateTimeExec && dateTimeExec < dateTimeNow)
+            // 毎分チェック
+            if((0 <= dateTimeNow.Second ) && (dateTimeNow.Second < 5))
             {
-                Debug.WriteLine("eeeexxxeeecccc###########################");
-                Debug.WriteLine(dateTimeExec);
-                Debug.WriteLine("eeeexxxeeecccc###########################");
-                //// wavファイルを読み込む
-                //// ファイルパスは./{時刻.wav}
-                //System.Media.SoundPlayer player = new System.Media.SoundPlayer(Path.GetDirectoryName(Application.ExecutablePath) + "\\20230118-005702_琴葉 茜_テスト音声.wav");
-                //// 非同期再生する
-                //player.Play();
+                // もうちょっと何とかさ...
+                string parsedTime = $"{dateTimeNow.Hour.ToString().PadLeft(2, '0')}{dateTimeNow.Minute.ToString().PadLeft(2, '0')}";
 
-                //RingWav(chimeList);
+                // 配列に含まれる時刻と、今の時刻が一致する
+                // 無理やりパスに変換して一致することを確認。ふつう逆？
+                if (timeDirectories.Contains(exeDir + "\\voice\\" + parsedTime)) {
+                    RandomRing(parsedTime);
+                };
             }
-            // 処理が終わってから最終チェック時刻を更新
-            dateTimeLastCheck = dateTimeNow;
         }
-        public void DisposeTimer()
+        private async void RandomRing(string parsedTime)
         {
-            timer.Stop();
-        }
-        public void RingWav(Chime[] chimeList) {
-            //整列
-            //chimeList.Sort((n,m) => n.Time - m.Time);
-            //Array.Sort(chimeList, (n,m)=> n.Time.CompareTo(m.Time));
+            //ファイル内が空なら何もしない
+            //一つでもあれば鳴らす
+            //複数あったら配列から乱数指定
+            // 正規表現
+            string pattern = @"\.wav$";
 
-            // ring[chimeIndex]
+            //正規表現でファイル名ではなくフルパスでmatchしてる
+            //うまいことファイル名だけ取り出すか、フルパスで正規表現
+            var e = Directory.EnumerateFiles(exeDir + "\\voice\\" + parsedTime + "\\")
+                .Where(x => Regex.IsMatch(x, pattern));
 
-            // 鳴らすchimeを管理
-            if (chimeIndex == chimeList.Length - 1)
-            {
-                chimeIndex = 0;
-            } else {
-                chimeIndex++;
-            }
-        }
-            
+            Random random = new System.Random();
+
+            SoundPlayer player = new SoundPlayer(e.ElementAt(random.Next(0, e.Count())));
+
+            // c#の同期非同期よくわかってない。この書き方は微妙そう
+            player.Play();
+            await Task.Delay(50000);
+            player.Stop();
+            // メモリ開放...?
+            player.Dispose();
+        }      
     }
-
 }
