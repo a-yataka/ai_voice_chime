@@ -1,0 +1,19 @@
+chimes:
+  - time: 0000
+    preset: 琴葉 茜
+    message: 午前0時、日付が変わったで、寝なくて大丈夫か？
+  - time: 0000
+    preset: 琴葉 葵
+    message: 午前0時です、そろそろ寝ないとね？
+  - time: 0200
+    preset: 琴葉 茜
+    message: 琴葉茜が、午前、2時位を、お知らせします
+  - time: 1500
+    preset: 琴葉 茜
+    message: 午後３時やで、今日のおやつはなんやろな、葵ー？
+  - time: 1500
+    preset: 琴葉 葵
+    message: 午後３時です、今日のおやつはチョコミントアイス！
+  - time: 8282882
+    preset: 琴葉 葵
+    message: えらー

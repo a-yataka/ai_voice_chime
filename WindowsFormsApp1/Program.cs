@@ -29,8 +29,9 @@ namespace WindowsFormsApp1
 
         static void Main(String[] args)
         {
+            Directory.CreateDirectory(exeDir + $"\\voice");
             // wavのあるディレクトリを読み込む
-            ReadVoiceDirectory();
+            //ReadVoiceDirectory();
             // 読み込んだディレクトリから定刻でwavを再生
             Ring ring = new Ring(timeDirectories, exeDir);
 
@@ -42,7 +43,7 @@ namespace WindowsFormsApp1
         {
             // 常駐アプリ（タスクトレイのアイコン）を作成
             var icon = new NotifyIcon();
-            icon.Icon = new Icon("Icon1.ico");
+            icon.Icon = new Icon("icon.ico");
 
             icon.ContextMenuStrip = ContextMenu();
             icon.Text = "A.I.Chime";
@@ -76,6 +77,10 @@ namespace WindowsFormsApp1
             menu.Items.Add("ファイルを開く", null, (s, e) => {
                 System.Diagnostics.Process.Start(exeDir);
             });
+            ////
+            //menu.Items.Add("wavファイルのリロード", null, (s, e) => {
+            //    System.Diagnostics.Process.Start(exeDir);
+            //});
             // 読み込み&ボイス生成
             menu.Items.Add("使い方", null, (s, e) => {
                 // オフライン用ドキュメントorウェブサイトリンク
@@ -88,7 +93,7 @@ namespace WindowsFormsApp1
             return menu;
         }
 
-        private static void ReadVoiceDirectory()
+        public static void ReadVoiceDirectory()
         {
             // 時刻ごとに用意したディレクトリを読み込む
             string pattern = @"voice\\([01][1-9]|2[0-3])[0-5][0-9]$";

@@ -36,6 +36,16 @@ namespace WindowsFormsApp1
         }
         private void OnElapsed(object senderObject, ElapsedEventArgs e)
         {
+            // もともと別関数にしてたけど、５秒おきに読み込むディレクトリを取得しなおすことで
+            // exe実行しっぱなしでもファイルを読み込める。メモリは食いつぶす。
+            // 時刻ごとに用意したディレクトリを読み込む
+            string pattern = @"voice\\([01][1-9]|2[0-3])[0-5][0-9]$";
+
+            IEnumerable<string> directories = Directory.EnumerateDirectories(exeDir + "\\voice")
+                .Where(x => Regex.IsMatch(x, pattern));
+
+            timeDirectories = directories.ToArray();
+
             // 現在時刻
             dateTimeNow = DateTime.Now;
 
@@ -52,6 +62,10 @@ namespace WindowsFormsApp1
                 };
             }
         }
+        //public void Reload()
+        //{
+
+        //}
         private async void RandomRing(string parsedTime)
         {
             //ファイル内が空なら何もしない
