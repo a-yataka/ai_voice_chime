@@ -39,25 +39,32 @@ namespace WindowsFormsApp1
             // もともと別関数にしてたけど、５秒おきに読み込むディレクトリを取得しなおすことで
             // exe実行しっぱなしでもファイルを読み込める。メモリは食いつぶす。
             // 時刻ごとに用意したディレクトリを読み込む
-            string pattern = @"voice\\([01][1-9]|2[0-3])[0-5][0-9]$";
+            string pattern = @"voice\\([01][0-9]|2[0-3])[0-5][0-9]$";
 
             IEnumerable<string> directories = Directory.EnumerateDirectories(exeDir + "\\voice")
                 .Where(x => Regex.IsMatch(x, pattern));
-
+            
             timeDirectories = directories.ToArray();
+
+
+
+            Debug.WriteLine(dateTimeNow);
 
             // 現在時刻
             dateTimeNow = DateTime.Now;
-
             // 毎分チェック
             if((0 <= dateTimeNow.Second ) && (dateTimeNow.Second < 5))
             {
+                Debug.WriteLine(dateTimeNow);
                 // もうちょっと何とかさ...
                 string parsedTime = $"{dateTimeNow.Hour.ToString().PadLeft(2, '0')}{dateTimeNow.Minute.ToString().PadLeft(2, '0')}";
 
                 // 配列に含まれる時刻と、今の時刻が一致する
                 // 無理やりパスに変換して一致することを確認。ふつう逆？
+                Debug.WriteLine(exeDir + "\\voice\\" + parsedTime);
+                Debug.WriteLine(timeDirectories.Length);
                 if (timeDirectories.Contains(exeDir + "\\voice\\" + parsedTime)) {
+                    Debug.WriteLine("RING");
                     RandomRing(parsedTime);
                 };
             }

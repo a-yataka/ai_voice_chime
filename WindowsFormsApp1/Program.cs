@@ -124,7 +124,7 @@ namespace WindowsFormsApp1
         public static void ReadVoiceDirectory()
         {
             // 時刻ごとに用意したディレクトリを読み込む
-            string pattern = @"voice\\([01][1-9]|2[0-3])[0-5][0-9]$";
+            string pattern = @"voice\\([01][0-9]|2[0-3])[0-5][0-9]$";
 
             IEnumerable<string> directories = Directory.EnumerateDirectories(exeDir + "\\voice")
                 .Where(x => Regex.IsMatch(x, pattern));
