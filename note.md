@@ -169,3 +169,5 @@ AIvoice‚Åƒ{ƒCƒXƒf[ƒ^‚ð•Û‘¶‚·‚é‹@”\‚Æƒtƒ@ƒCƒ‹‚©‚çƒ{ƒCƒXƒf[ƒ^‚ð“Ç‚Ýž‚Þ‹@”\‚ÍŠ®‘
             //]
 
 ƒŠƒ[ƒhƒ{ƒ^ƒ“H–ˆ•bƒtƒ@ƒCƒ‹‚ð“Ç‚Ýž‚Ý‚È‚¨‚µ‚Ä‚à‚¢‚¢‚©‚àH
+
+- ƒvƒŠƒZƒbƒg‚ª‚È‚¢ê‡‚ÌƒGƒ‰[

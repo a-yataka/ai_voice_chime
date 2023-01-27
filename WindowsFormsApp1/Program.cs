@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.MenuBand;
 
 namespace WindowsFormsApp1
 {
@@ -39,11 +40,27 @@ namespace WindowsFormsApp1
             Application.Run();
         }
 
+        private static Icon LoadIcon(string iconPath)
+        {
+            Icon icon;
+            // アイコンファイルのロード
+            try
+            {
+                icon = new Icon("icon.ico");
+            }
+            catch(Exception e)
+            {
+                icon = SystemIcons.Application;
+            }
+            return icon;
+        }
+
         private static void CreateNotifyIcon()
         {
             // 常駐アプリ（タスクトレイのアイコン）を作成
             var icon = new NotifyIcon();
-            icon.Icon = new Icon("icon.ico");
+            //icon.Icon = new Icon("icon.ico");
+            icon.Icon = LoadIcon("icon.ico");
 
             icon.ContextMenuStrip = ContextMenu();
             icon.Text = "A.I.Chime";
@@ -53,6 +70,17 @@ namespace WindowsFormsApp1
         {
             // アイコンを右クリックしたときのメニューを返却
             var menu = new ContextMenuStrip();
+
+            var icon = new NotifyIcon();
+            icon.Icon = LoadIcon("icon.ico");
+
+            ToolStripMenuItem menuTitle = new ToolStripMenuItem();
+            menuTitle.Text = "AI_Chime";
+            menuTitle.Image = Image.FromFile("icon.ico");
+            menuTitle.Enabled = false;
+
+            menu.Items.Add(menuTitle);
+            menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add("ボイス生成", null, (s, e) => {
                 // メイン機能
                 DialogResult result = MessageBox.Show(
