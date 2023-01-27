@@ -46,7 +46,9 @@ namespace WindowsFormsApp1
             }catch(Exception e){
                 Debug.WriteLine(e.Message);
             }
-            //addMessages();
+
+            _ttsControl.TextEditMode = TextEditMode.List;
+
         }
 
 
